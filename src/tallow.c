@@ -377,7 +377,7 @@ int main(void)
 		r++;
 	dbg("Forwarded through %d items in the journal to reach the end\n", r);
 
-	fprintf(stderr, PACKAGE_STRING " Started\n");
+	fprintf(stderr, "Started v" PACKAGE_VERSION "\n");
 
 	for (;;) {
 		const void *d, *dt;
