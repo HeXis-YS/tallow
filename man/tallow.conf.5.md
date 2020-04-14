@@ -5,21 +5,21 @@
 
 The tallow configuration file
 
-# NAME
+## NAME
 
 tallow.conf - Tallow daemon configuration file
 
-# SYNOPSIS
+## SYNOPSIS
 
 `/etc/tallow.conf`
 
-# DESCRIPTION
+## DESCRIPTION
 
 This file is read on startup by the tallow(1) daemon, and can
 be used to provide options to the tallow daemon. If not present,
 tallow will operate with built-in defaults.
 
-# OPTIONS
+## OPTIONS
 
 `backend`=`nft|iptables|firewall-cmd`
 Tallow can operate using 3 different methods to block IP
@@ -125,6 +125,6 @@ Use the following commands if you're using nft(1):
   nft add rule inet tallow_table tallow_chain ip6 saddr @tallow6_set drop
   ```
 
-# SEE ALSO
+## SEE ALSO
 
 tallow(1), tallow.patterns(5)
