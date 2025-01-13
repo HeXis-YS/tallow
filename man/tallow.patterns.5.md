@@ -38,9 +38,10 @@ Pattern configuration files use the JavaScript Object Notation (JSON) format.
 The JSON must be two levels deep and all properties are required. The root
 object is an array containing objects with a `filter` key and an `items` key.
 
-* `filter` is a string that defines a field for filtering the journal file.
-  This helps make sure patterns are only matched to a subset of journal
-  entries. See systemd.journal-fields(7) for valid journal fields.
+* `filter` is a string, or an array of strings, that defines a field for
+  filtering the journal file.  This helps make sure patterns are only matched
+  to a subset of journal entries. See systemd.journal-fields(7) for valid
+  journal fields.
 
 * `items` is an array of objects that contains three elements: `ban`, `score`,
   and `pattern`.
@@ -79,7 +80,7 @@ object is an array containing objects with a `filter` key and an `items` key.
    ```
    [
      {
-       "filter": "SYSLOG_IDENTIFIER=sshd",
+       "filter": [ "SYSLOG_IDENTIFIER=sshd" ],
        "items": [
          {
            "ban": 0,
