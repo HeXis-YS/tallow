@@ -366,6 +366,7 @@ int main(void)
 	struct filter_struct *flt = filters;
 	while (flt) {
 		sd_journal_add_match(j, flt->filter, 0);
+		dbg("Subbed %s\n", flt->filter);
 		flt = flt->next;
 	}
 

@@ -47,6 +47,8 @@ void filter_add(const char *filter)
 
 	f->filter = strdup(filter);
 
+	dbg("Adding filter: %s\n", f->filter);
+
 	h = filters;
 	if (!h) {
 		filters = f;
@@ -77,6 +79,8 @@ void pattern_add(const char *pattern, int ban, double score)
 			err, pcre_err);
 		exit(EXIT_FAILURE);
 	}
+
+	dbg("Adding pattern: %s %d %lf\n", pattern, ban, score);
 
 	struct pattern_struct *h = patterns;
 	if (!h) {
