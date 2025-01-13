@@ -372,6 +372,7 @@ int main(void)
 
 	/* go to the tail and wait */
 	r = sd_journal_seek_tail(j);
+	sd_journal_previous(j);
 	sd_journal_wait(j, (uint64_t) 0);
 	dbg("sd_journal_seek_tail() returned %d\n", r);
 	while (sd_journal_next(j) != 0)
@@ -388,6 +389,7 @@ int main(void)
 		if (r == SD_JOURNAL_INVALIDATE) {
 			fprintf(stderr, "Journal was rotated, resetting\n");
 			sd_journal_seek_tail(j);
+			sd_journal_previous(j);
 		} else if (r == SD_JOURNAL_NOP) {
 			dbg("Timeout reached, waiting again\n");
 			continue;
@@ -417,6 +419,8 @@ int main(void)
 
 			m = strndup(d, l+1);
 			m[l] = '\0';
+
+			dbg("msg %s\n", m);
 
 			struct pattern_struct *pat = patterns;
 			while (pat) {
