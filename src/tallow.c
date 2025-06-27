@@ -254,8 +254,7 @@ int main(void)
 	sigaction(SIGUSR1, &s, NULL);
 #endif
 
-	if (access("/proc/sys/net/ipv6", R_OK | X_OK) == 0)
-		has_ipv6 = 1;
+
 
 	f = fopen(SYSCONFDIR "/tallow.conf", "r");
 	if (f) {
@@ -293,6 +292,9 @@ int main(void)
 		}
 		fclose(f);
 	}
+
+	if (access("/proc/sys/net/ipv6", R_OK | X_OK) != 0)
+		has_ipv6 = 0;
 
 	if (!has_ipv6)
 		fprintf(stdout, "ipv6 support disabled.\n");
