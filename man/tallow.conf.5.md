@@ -21,10 +21,6 @@ tallow will operate with built-in defaults.
 
 # OPTIONS
 
-`fwcmd_path`=`<string>`
-Specifies the location of the ipset(1) firewall-cmd(1) programs. By
-default, tallow will look in "/usr/sbin" for them.
-
 `ipt_path`=`<string>`
 Specifies the location of the ipset(1) program and iptables(1) or
 ip6tables(1) programs. By default, tallow will look in "/usr/sbin"
@@ -60,7 +56,7 @@ missing ip6tables. Even with ipv6 disabled, tallow will track
 and log ipv6 addresses.
 
 `nocreate`=`<0|1>` Disable the creation of firewall rules and ipset sets. By
-default, tallow will create new firewall-cmd(1) or iptables(1) and ip6tables(1)
+default, tallow will create new iptables(1) and ip6tables(1)
 rules when needed automatically. If set to `1`, `tallow(1)` will not create any
 new firewall DROP rules or ipset sets that are needed work. You should create
 them manually before tallow starts up and remove them afterwards using the sets
@@ -74,17 +70,6 @@ Use the following commands if you're using iptables(1):
 
   ipset create tallow6 hash:ip family inet6 timeout 3600
   ip6tables -t filter -I INPUT 1 -m set --match-set tallow6 src -j DROP
-  ```
-
-Use the following commands if you're using firewalld(1):
-
-```
-  firewall-cmd --permanent --new-ipset=tallow --type=hash:ip --family=inet --option=timeout=3600
-  firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 1 -m set --match-set tallow src -j DROP
-
-  firewall-cmd --permanent --new-ipset=tallow6 --type=hash:ip --family=inet6 --option=timeout=3600
-  firewall-cmd --permanent --direct --add-rule ipv6 filter INPUT 1 -m set --match-set tallow6 src -j DROP
-
   ```
 
 # SEE ALSO
