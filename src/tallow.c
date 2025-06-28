@@ -119,8 +119,6 @@ static void setup(void)
 
 static void block(struct block_struct *s, int instant_block)
 {
-	setup();
-
 	if (strchr(s->ip, ':')) {
 		if (has_ipv6) {
 			if (instant_block > 0) {
@@ -326,6 +324,9 @@ int main(void)
 	while (sd_journal_next(j) != 0)
 		r++;
 	dbg("Forwarded through %d items in the journal to reach the end\n", r);
+
+	setup();
+	ext_ignore("/usr/local/service/iptables.sh");
 
 	fprintf(stderr, PACKAGE_STRING " Started\n");
 
