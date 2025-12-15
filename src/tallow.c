@@ -42,6 +42,7 @@ static int expires = 3600;
 static int has_ipv6 = 0;
 static bool nocreate = false;
 static bool conf_backend = false;
+static bool exiting = false;
 static sd_journal *j;
 
 static int ext(char *fmt, ...)
@@ -74,6 +75,7 @@ static void ext_ignore(char *fmt, ...)
 
 struct backend_struct {
 	char name[32];
+	bool is_setup;
 	int(*probe)(void);
 	int(*setup)(void);
 	int(*teardown)(void);
@@ -282,6 +284,7 @@ static void setup(void)
 			if (strcmp(backends[b].name, backend_str) == 0) {
 				fprintf(stdout, "Using backend from config: %s\n", backends[b].name);
 				backend = &backends[b];
+				backend->is_setup = false;
 				break;
 			}
 		}
@@ -291,6 +294,7 @@ static void setup(void)
 			if (backends[b].probe() == 0) {
 				fprintf(stdout, "Using backend: %s\n", backends[b].name);
 				backend = &backends[b];
+				backend->is_setup = false;
 				break;
 			}
 		}
@@ -308,6 +312,7 @@ static void setup(void)
 		fprintf(stderr, "Backend \"%s\" failed to setup, cannot continue!\n", backend->name);
 		exit(EXIT_FAILURE);
 	}
+	backend->is_setup = true;
 }
 
 static void block(struct block_struct *s, int instant_block)
@@ -342,6 +347,7 @@ again:
 			fprintf(stderr, "Backend \"%s\" failed to teardown, cannot continue!\n", backend->name);
 			exit(EXIT_FAILURE);
 		}
+		backend->is_setup = false;
 
 		sleep(1);
 
@@ -349,6 +355,7 @@ again:
 			fprintf(stderr, "Backend \"%s\" failed to setup, cannot continue!\n", backend->name);
 			exit(EXIT_FAILURE);
 		}
+		backend->is_setup = true;
 		goto again;
 	}
 
@@ -444,13 +451,19 @@ static void sigusr1(int u __attribute__ ((unused)))
 }
 #endif
 
+static void sigint(int u __attribute__ ((unused)))
+{
+	exiting = true;
+}
+
 
 int main(void)
 {
 	int r;
 	FILE *f;
-	int timeout = 60;
+	int timeout = 5; // how long a ^C or TERM may wait...
 	long long unsigned int last_timestamp = 0;
+	struct sigaction s_int;
 
 	json_load_patterns();
 
@@ -458,16 +471,20 @@ int main(void)
 	strcpy(fwcmd_path, "/usr/sbin");
 	strcpy(nft_path, "/usr/sbin");
 
-	//XXX FIXME handle ^C INT TERM gracefully
+	/* ^C and TERM handler */
+	memset(&s_int, 0, sizeof(struct sigaction));
+	s_int.sa_handler = sigint;
+	sigaction(SIGINT, &s_int, NULL);
+	sigaction(SIGTERM, &s_int, NULL);
 
 #ifdef DEBUG
 	fprintf(stderr, "Debug output enabled. Send SIGUSR1 to dump internal state table\n");
 
-	struct sigaction s;
+	struct sigaction s_usr1;
 
-	memset(&s, 0, sizeof(struct sigaction));
-	s.sa_handler = sigusr1;
-	sigaction(SIGUSR1, &s, NULL);
+	memset(&s_usr1, 0, sizeof(struct sigaction));
+	s_usr1.sa_handler = sigusr1;
+	sigaction(SIGUSR1, &s_usr1, NULL);
 #endif
 
 	if (access("/proc/sys/net/ipv6", R_OK | X_OK) == 0)
@@ -557,6 +574,13 @@ int main(void)
 		size_t l, dl;
 
 		r = sd_journal_wait(j, (uint64_t) timeout * 1000000);
+
+		if (exiting) {
+			if ((backend != NULL) && backend->is_setup)
+				backend->teardown();
+			break;
+		}
+
 		if (r == SD_JOURNAL_INVALIDATE) {
 			fprintf(stderr, "Journal was rotated, resetting\n");
 			sd_journal_seek_tail(j);
