@@ -1,5 +1,5 @@
 % TALLOW.PATTERNS(5)
-% Auke Kok `<auke-jan.h.kok@intel.com>`
+% Auke Kok `<sofar@foo-projects.org>`
 
 # tallow.patterns
 
@@ -26,7 +26,7 @@ tallow(1) daemon will read all JSON files in the configuration directories at
 startup.
 
 tallow(1) operates with default pattern definitions
-in`/usr/share/tallow/*.json`. Users can add more patterns with their own JSON
+in `/usr/share/tallow/*.json`. Users can add more patterns with their own JSON
 files under `/etc/tallow`. The default JSON files can be overridden by creating
 the same file under `/etc/tallow`.
 
