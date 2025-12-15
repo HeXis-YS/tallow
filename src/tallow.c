@@ -272,12 +272,6 @@ static struct backend_struct *backend = NULL;
 
 static void setup(void)
 {
-	static bool done = false;
-
-	if (done)
-		return;
-	done = true;
-
 	/* pick backend */
 	if (conf_backend) {
 		for (int b = 0; b < MAX_BACKENDS; b++) {
@@ -319,9 +313,6 @@ static void block(struct block_struct *s, int instant_block)
 {
 	int failed = 0;
 	int ret;
-
-	/* only does something once, ever */
-	setup();
 
 again:
 	if (strchr(s->ip, ':')) {
@@ -566,6 +557,8 @@ int main(void)
 	while (sd_journal_next(j) != 0)
 		r++;
 	dbg("Forwarded through %d items in the journal to reach the end\n", r);
+
+	setup();
 
 	fprintf(stderr, "Started v" PACKAGE_VERSION "\n");
 
