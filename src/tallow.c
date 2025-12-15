@@ -87,7 +87,7 @@ struct backend_struct {
  * ipset common functions - for fwcmd and iptables backends
  */
 
-int ipset_block(char *addr, int timeout)
+static int ipset_block(char *addr, int timeout)
 {
 	if (timeout > 0) {
 		return ext("%s/ipset -! add tallow %s timeout %d",
@@ -97,7 +97,7 @@ int ipset_block(char *addr, int timeout)
 	}
 }
 
-int ipset_block6(char *addr, int timeout)
+static int ipset_block6(char *addr, int timeout)
 {
 	if (timeout > 0) {
 		return ext("%s/ipset -! add tallow6 %s timeout %d",
@@ -110,7 +110,7 @@ int ipset_block6(char *addr, int timeout)
 /*
  * firewall-cmd
  */
-int fwcmd_probe(void)
+static int fwcmd_probe(void)
 {
 	if ((access(fwcmd_path, X_OK) == 0) && ext("%s/firewall-cmd --state --quiet", fwcmd_path) == 0)
 		return 0;
@@ -118,7 +118,7 @@ int fwcmd_probe(void)
 	return 1;
 }
 
-int fwcmd_setup(void)
+static int fwcmd_setup(void)
 {
 	/* create ipv4 rule and ipset */
 	if (ext("%s/firewall-cmd --permanent --quiet --new-ipset=tallow --type=hash:ip --family=inet --option=timeout=%d", fwcmd_path, expires)) {
@@ -151,7 +151,7 @@ int fwcmd_setup(void)
 	return 0;
 }
 
-int fwcmd_teardown(void)
+static int fwcmd_teardown(void)
 {
 	/* reset all rules in case the running fw changes */
 	ext_ignore("%s/firewall-cmd --permanent --direct --remove-rule ipv4 filter INPUT 1 -m set --match-set tallow src -j DROP 2> /dev/null", fwcmd_path);
@@ -167,14 +167,14 @@ int fwcmd_teardown(void)
 /*
  * nft
  */
-int nft_probe(void)
+static int nft_probe(void)
 {
 	if ((access(nft_path, X_OK) == 0) && ((ext("%s/nft list tables > /dev/null", nft_path) == 0)))
 		return 0;
 	return 1;
 }
 
-int nft_setup(void)
+static int nft_setup(void)
 {
 	int ret;
 
@@ -190,13 +190,13 @@ int nft_setup(void)
 	return ret;
 }
 
-int nft_teardown(void)
+static int nft_teardown(void)
 {
 	/* teardown is super easy with nft */
 	return ext("%s/nft delete table inet tallow_table", nft_path);
 }
 
-int nft_block(char *addr, int timeout)
+static int nft_block(char *addr, int timeout)
 {
 	if (timeout > 0)
 		return ext("%s/nft add element inet tallow_table tallow_set { %s timeout %ds }", nft_path, addr, timeout);
@@ -204,7 +204,7 @@ int nft_block(char *addr, int timeout)
 	return ext("%s/nft add element inet tallow_table tallow_set { %s }", nft_path, addr);
 }
 
-int nft_block6(char *addr, int timeout)
+static int nft_block6(char *addr, int timeout)
 {
 	if (timeout > 0)
 		return ext("%s/nft add element inet tallow_table tallow6_set { %s timeout %ds }", nft_path, addr, timeout);
@@ -215,13 +215,13 @@ int nft_block6(char *addr, int timeout)
 /*
  * iptables
  */
-int iptables_probe(void)
+static int iptables_probe(void)
 {
 	/* no-op, will always fall back to iptables no matter what */
 	return 0;
 }
 
-int iptables_setup(void)
+static int iptables_setup(void)
 {
 	/* create ipv4 rule and ipset */
 	if (ext("%s/ipset create tallow hash:ip family inet timeout %d", ipt_path, expires)) {
@@ -248,7 +248,7 @@ int iptables_setup(void)
 	return 0;
 }
 
-int iptables_teardown(void)
+static int iptables_teardown(void)
 {
 	ext_ignore("%s/iptables -t filter -D INPUT -m set --match-set tallow src -j DROP 2> /dev/null", ipt_path);
 	ext_ignore("%s/ipset destroy tallow 2> /dev/null", ipt_path);
@@ -358,7 +358,7 @@ again:
 	}
 }
 
-void find(const char *ip, float weight, int instant_block)
+static void find(const char *ip, float weight, int instant_block)
 {
 	struct block_struct *s = blocks;
 	struct block_struct *n;
