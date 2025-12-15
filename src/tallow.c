@@ -161,7 +161,7 @@ static int fwcmd_teardown(void)
 		ext_ignore("%s/firewall-cmd --permanent --direct --remove-rule ipv6 filter INPUT 1 -m set --match-set tallow6 src -j DROP 2> /dev/null", fwcmd_path);
 		ext_ignore("%s/firewall-cmd --permanent --delete-ipset=tallow6 2> /dev/null", fwcmd_path);
 	}
-	return -0;
+	return 0;
 }
 
 /*
@@ -276,7 +276,7 @@ static void setup(void)
 	if (conf_backend) {
 		for (int b = 0; b < MAX_BACKENDS; b++) {
 			if (strcmp(backends[b].name, backend_str) == 0) {
-				fprintf(stdout, "Using backend from config: %s\n", backends[b].name);
+				fprintf(stderr, "Using backend from config: %s\n", backends[b].name);
 				backend = &backends[b];
 				backend->is_setup = false;
 				break;
@@ -286,7 +286,7 @@ static void setup(void)
 		/* probe backends */
 		for (int b = 0; b < MAX_BACKENDS; b++) {
 			if (backends[b].probe() == 0) {
-				fprintf(stdout, "Using backend: %s\n", backends[b].name);
+				fprintf(stderr, "Using backend: %s\n", backends[b].name);
 				backend = &backends[b];
 				backend->is_setup = false;
 				break;
@@ -527,7 +527,7 @@ int main(void)
 	}
 
 	if (!has_ipv6)
-		fprintf(stdout, "ipv6 support disabled.\n");
+		fprintf(stderr, "ipv6 support disabled.\n");
 
 	if (!whitelist) {
 		whitelist_add("127.0.0.1");
