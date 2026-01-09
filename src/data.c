@@ -18,7 +18,8 @@
 #include <sys/time.h>
 #include <malloc.h>
 
-#include <pcre.h>
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
 
 #include "data.h"
 
@@ -71,12 +72,29 @@ void pattern_add(const char *pattern, int ban, double score)
 	p->instant_block = ban;
 	p->weight = score;
 
-	const char *pcre_err;
-	int err;
-	p->re = pcre_compile(pattern, 0, &pcre_err, &err, NULL);
+	PCRE2_UCHAR pcre_err[256];
+	int err = 0;
+	PCRE2_SIZE erroff = 0;
+
+	p->re = pcre2_compile(
+		(PCRE2_SPTR)pattern,
+		PCRE2_ZERO_TERMINATED,
+		0, // options
+		&err,
+		&erroff,
+		NULL // compile context
+	);
+
 	if (!p->re) {
-		fprintf(stderr, "PCRE compilation failed. Offset %d: %s\n",
-			err, pcre_err);
+		pcre2_get_error_message(err, pcre_err, sizeof(pcre_err));
+		fprintf(stderr, "PCRE2 compilation failed. Offset %zu: %s\n",
+			(size_t)erroff, (char *)pcre_err);
+		exit(EXIT_FAILURE);
+	}
+
+	p->md = pcre2_match_data_create_from_pattern(p->re, NULL);
+	if (!p->md) {
+		perror("pcre2_match_data_create_from_pattern()");
 		exit(EXIT_FAILURE);
 	}
 

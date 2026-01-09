@@ -13,7 +13,8 @@
 
 #pragma once
 
-#include <pcre.h>
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
 
 #ifdef DEBUG
 #define dbg(args...) fprintf(stderr, ##args)
@@ -39,7 +40,8 @@ struct pattern_struct {
 	int instant_block;
 	float weight;
 	char *pattern;
-	pcre *re;
+	pcre2_code *re;
+	pcre2_match_data *md;
 	struct pattern_struct *next;
 };
 

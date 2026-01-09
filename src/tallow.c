@@ -26,13 +26,12 @@
 #include <sys/stat.h>
 #include <linux/limits.h>
 
-#include <pcre.h>
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
 #include <systemd/sd-journal.h>
 
 #include "json.h"
 #include "data.h"
-
-#define MAX_OFFSETS 30
 
 static char ipt_path[PATH_MAX];
 static char fwcmd_path[PATH_MAX];
@@ -612,15 +611,15 @@ int main(void)
 
 			struct pattern_struct *pat = patterns;
 			while (pat) {
-				int off[MAX_OFFSETS];
-				int ret = pcre_exec(pat->re, NULL, m, l, 0, 0, off, MAX_OFFSETS);
+				int ret = pcre2_match(pat->re, (PCRE2_SPTR)m, (PCRE2_SIZE)l, 0, 0, pat->md, NULL);
 				if (ret == 2) {
-					const char *s;
-					ret = pcre_get_substring(m, off, 2, 1, &s);
-					if (ret > 0) {
-						dbg("%s == %s (%d!)\n", s, pat->pattern, pat->instant_block);
-						find(s, pat->weight, pat->instant_block);
-						pcre_free_substring(s);
+					PCRE2_UCHAR *s = NULL;
+					PCRE2_SIZE slen = 0;
+					ret = pcre2_substring_get_bynumber(pat->md, 1, &s, &slen);
+					if (ret >= 0) {
+						dbg("%s == %s (%d!)\n", (char *)s, pat->pattern, pat->instant_block);
+						find((char *)s, pat->weight, pat->instant_block);
+						pcre2_substring_free(s);
 					}
 				}
 
